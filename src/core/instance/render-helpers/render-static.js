@@ -27,6 +27,7 @@ export function renderStatic (
 /**
  * Runtime helper for v-once.
  * Effectively it means marking the node as static with a unique key.
+ * 有点多余, 因为含有 v-once 指令的节点都被当做静态节点处理了, 所以也不会走这儿
  */
 export function markOnce (
   tree: VNode | Array<VNode>,
@@ -37,6 +38,10 @@ export function markOnce (
   return tree
 }
 
+/**
+ * 为 VNode 打静态标记, 在 VNode 上添加三个属性:
+ *  { isStatick: true, key: xx, isOnce: true or false }
+ */
 function markStatic (
   tree: VNode | Array<VNode>,
   key: string,
@@ -44,6 +49,7 @@ function markStatic (
 ) {
   if (Array.isArray(tree)) {
     for (let i = 0; i < tree.length; i++) {
+      // tree 为 VNode 数组, 循环遍历其中的每个 VNode, 为每个 VNode 做静态标记
       if (tree[i] && typeof tree[i] !== 'string') {
         markStaticNode(tree[i], `${key}_${i}`, isOnce)
       }

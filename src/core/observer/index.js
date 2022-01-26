@@ -45,6 +45,7 @@ export class Observer {
     this.vmCount = 0
     def(value, '__ob__', this)
     if (Array.isArray(value)) {
+      // 处理数组响应式
       if (hasProto) {
         protoAugment(value, arrayMethods)
       } else {
@@ -52,6 +53,7 @@ export class Observer {
       }
       this.observeArray(value)
     } else {
+      // 处理对象响应式
       this.walk(value)
     }
   }
@@ -106,6 +108,7 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
  * Attempt to create an observer instance for a value,
  * returns the new observer if successfully observed,
  * or the existing observer if the value already has one.
+ * 响应式处理的入口
  */
 export function observe (value: any, asRootData: ?boolean): Observer | void {
   if (!isObject(value) || value instanceof VNode) {
@@ -121,6 +124,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
     Object.isExtensible(value) &&
     !value._isVue
   ) {
+    // 实例化 Observer, 进行响应式处理
     ob = new Observer(value)
   }
   if (asRootData && ob) {
@@ -139,13 +143,12 @@ export function defineReactive (
   customSetter?: ?Function,
   shallow?: boolean
 ) {
+  // 实例化一个 Dep, 一个 key 对应一个 Dep
   const dep = new Dep()
-
   const property = Object.getOwnPropertyDescriptor(obj, key)
   if (property && property.configurable === false) {
     return
   }
-
   // cater for pre-defined getter/setters
   const getter = property && property.get
   const setter = property && property.set
@@ -159,6 +162,7 @@ export function defineReactive (
     configurable: true,
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
+      // 进行依赖收集
       if (Dep.target) {
         dep.depend()
         if (childOb) {
@@ -188,6 +192,7 @@ export function defineReactive (
         val = newVal
       }
       childOb = !shallow && observe(newVal)
+      // 异步更新的入口
       dep.notify()
     }
   })
@@ -198,22 +203,29 @@ export function defineReactive (
  * triggers change notification if the property doesn't
  * already exist.
  */
+// 通过 Vue.set 或者 this.$set 方法给 target 的指定 key 设置值 val
+// 如果 target 不是响应式, 新属性会被设置, 但是不会做响应式处理
+// 如果 target 是响应式对象, 并且 key 原本不存在, 则为新 key 设置响应式, 然后执行依赖通知
 export function set (target: Array<any> | Object, key: any, val: any): any {
   if (process.env.NODE_ENV !== 'production' &&
     (isUndef(target) || isPrimitive(target))
   ) {
     warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+  // 更新数组指定下标的元素, Vue.set(target, idx, val), 通过 splice 方法实现响应式更新
   if (Array.isArray(target) && isValidArrayIndex(key)) {
     target.length = Math.max(target.length, key)
     target.splice(key, 1, val)
     return val
   }
+  // 更新对象已有属性: Vue.set(obj, key, val) 执行更新即可
   if (key in target && !(key in Object.prototype)) {
     target[key] = val
     return val
   }
   const ob = (target: any).__ob__
+  // 不能向 Vue 实例 或者 $data 动态添加响应式属性, vmCount 的用处之一,
+  // this.$data 的 ob.vmCount = 1, 表示根组件, 其它子组件的 vm.vmCount 都是0
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid adding reactive properties to a Vue instance or its root $data ' +
@@ -221,10 +233,12 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
     )
     return val
   }
+  // taget 不是响应式, 新属性会被设置, 但是不会触发响应式处理
   if (!ob) {
     target[key] = val
     return val
   }
+  // 给对象定义新属性, 通过defineReactive 方式设置响应式, 并触发依赖更新
   defineReactive(ob.value, key, val)
   ob.dep.notify()
   return val
@@ -239,6 +253,7 @@ export function del (target: Array<any> | Object, key: any) {
   ) {
     warn(`Cannot delete reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+  // 如果是数组, 则通过 splice 方法删除执行下标的元素, 触发响应式更新
   if (Array.isArray(target) && isValidArrayIndex(key)) {
     target.splice(key, 1)
     return
@@ -251,13 +266,16 @@ export function del (target: Array<any> | Object, key: any) {
     )
     return
   }
+  // 如果属性不存在 直接结束
   if (!hasOwn(target, key)) {
     return
   }
+  // 如果是对象, 则直接通过 delete 运算符删除
   delete target[key]
   if (!ob) {
     return
   }
+  // 执行依赖通知
   ob.dep.notify()
 }
 

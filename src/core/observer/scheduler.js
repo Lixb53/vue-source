@@ -67,6 +67,10 @@ if (inBrowser && !isIE) {
 
 /**
  * Flush both queues and run the watchers.
+ * 刷新队列, 由 flushCallbacks 函数负责调用
+ * 1. 更新 flushing 为 true, 表示正在刷新队列, 在此期间往队列中 push 新的 watcher 时需要特殊处理 (将其放在队列的合适位置)
+ * 2. 按照队列中的 watcher.id 从小到大的排序, 保证先创建的watcher 先执行, 也配合第一步
+ * 3. 遍历 watcher 队列, 依次执行 watcher.before, watcher.run, 并清除缓存的 watcher
  */
 function flushSchedulerQueue () {
   currentFlushTimestamp = getNow()
@@ -92,6 +96,7 @@ function flushSchedulerQueue () {
     }
     id = watcher.id
     has[id] = null
+    // 执行 watcher.run, 最终触发更新函数, 比如 updateComponent 或者 获取 this.xx(xx 为用户 watch 的第二个参数), 当然第二个参数也有可能是一个函数, 那就直接执行
     watcher.run()
     // in dev build, check and stop circular updates.
     if (process.env.NODE_ENV !== 'production' && has[id] != null) {
@@ -114,6 +119,12 @@ function flushSchedulerQueue () {
   const activatedQueue = activatedChildren.slice()
   const updatedQueue = queue.slice()
 
+  /**
+   * 重置调度状态
+   *  1. 重置 has 缓存对象
+   *  2. waiting = flushing = false, 表示刷新队列结束
+   *    表示可以向 callbacks 数组中放入新的 flushScheduleQueue 函数, 并且可以向浏览器的任务队列放入下一个 flushCallbacks 函数
+   */
   resetSchedulerState()
 
   // call component updated and activated hooks
@@ -163,13 +174,19 @@ function callActivatedHooks (queue) {
  */
 export function queueWatcher (watcher: Watcher) {
   const id = watcher.id
+  // 如果 watcher 已经存在, 则跳过, 不会重复入队
   if (has[id] == null) {
+    // 缓存 watcher.id, 用于判断 watcher 是否已经入队
     has[id] = true
     if (!flushing) {
+      // 当前没有刷新队列状态, watcher 直接入队
       queue.push(watcher)
     } else {
       // if already flushing, splice the watcher based on its id
       // if already past its id, it will be run next immediately.
+      // 如果已经在刷新队列了
+      // 则从队尾开始倒序遍历, 根据当前 watcher.id 找到它大于的 watcher.id 的位置, 然后将自己插入到该位置之后的下一个位置
+      // 即将当前 watcher 放入一排序的队列中, 且队列仍然是有序的
       let i = queue.length - 1
       while (i > index && queue[i].id > watcher.id) {
         i--
@@ -178,12 +195,16 @@ export function queueWatcher (watcher: Watcher) {
     }
     // queue the flush
     if (!waiting) {
+      // 如果 waiting = false, 表示当前浏览器的异步任务队列中没有 flushSchedulerQueue 函数
       waiting = true
 
       if (process.env.NODE_ENV !== 'production' && !config.async) {
         flushSchedulerQueue()
         return
       }
+
+      // 1. 将回调函数 (flushSchedulerQueue) 放入 callbacks 数组
+      // 2. 通过 pending 控制向浏览器任务队列中添加 flushCallbacks 函数
       nextTick(flushSchedulerQueue)
     }
   }

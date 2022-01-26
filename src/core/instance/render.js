@@ -65,7 +65,11 @@ export function renderMixin (Vue: Class<Component>) {
   Vue.prototype.$nextTick = function (fn: Function) {
     return nextTick(fn, this)
   }
-
+  
+  /**
+   * 通过执行 render 函数生成 VNode
+   * 不过里面加了大量的异常处理代码
+   */
   Vue.prototype._render = function (): VNode {
     const vm: Component = this
     const { render, _parentVnode } = vm.$options
@@ -80,6 +84,8 @@ export function renderMixin (Vue: Class<Component>) {
 
     // set parent vnode. this allows render functions to have access
     // to the data on the placeholder node.
+    
+    // 设置父 VNode, 这使得渲染函数可以访问占位符节点上的数据
     vm.$vnode = _parentVnode
     // render self
     let vnode
@@ -88,9 +94,12 @@ export function renderMixin (Vue: Class<Component>) {
       // separately from one another. Nested component's render fns are called
       // when parent component is patched.
       currentRenderingInstance = vm
+      // 执行 render 函数, 生成 VNode
       vnode = render.call(vm._renderProxy, vm.$createElement)
     } catch (e) {
       handleError(e, vm, `render`)
+      // 执行 render 函数出错
+      // 开发环境渲染错误信息, 生产环境返回之前的 vnode, 以防止渲染错误导致组件空白
       // return error render result,
       // or previous vnode to prevent render error causing blank component
       /* istanbul ignore else */
@@ -108,10 +117,12 @@ export function renderMixin (Vue: Class<Component>) {
       currentRenderingInstance = null
     }
     // if the returned array contains only a single node, allow it
+    // 如果返回的 VNode 是一个数组, 并且只包含了一个元素, 直接打平
     if (Array.isArray(vnode) && vnode.length === 1) {
       vnode = vnode[0]
     }
     // return empty vnode in case the render function errored out
+    // render 函数出错时, 返回一个空的vnode
     if (!(vnode instanceof VNode)) {
       if (process.env.NODE_ENV !== 'production' && Array.isArray(vnode)) {
         warn(

@@ -385,12 +385,14 @@ function assertObjectType (name: string, value: any, vm: ?Component) {
  * Merge two option objects into a new one.
  * Core utility used in both instantiation and inheritance.
  */
+// 合并两个选项, 出现相同配置项时,, 子选项会覆盖副选项的配置
 export function mergeOptions (
   parent: Object,
   child: Object,
   vm?: Component
 ): Object {
   if (process.env.NODE_ENV !== 'production') {
+    // 校验组件名称是否符合规范
     checkComponents(child)
   }
 
@@ -398,6 +400,7 @@ export function mergeOptions (
     child = child.options
   }
 
+  // 标准化 props inject directive 选项, 方便后续程序的处理
   normalizeProps(child, vm)
   normalizeInject(child, vm)
   normalizeDirectives(child)
@@ -406,6 +409,8 @@ export function mergeOptions (
   // but only if it is a raw options object that isn't
   // the result of another mergeOptions call.
   // Only merged options has the _base property.
+  // 处理原始 child 对象上的 extends 和 mixins, 分别执行 mergeOptions, 将这些继承而来的选项合并到 parent
+  // 递归合并选项, mergeOptions 处理过的对象含有 _base 属性
   if (!child._base) {
     if (child.extends) {
       parent = mergeOptions(parent, child.extends, vm)
@@ -417,6 +422,7 @@ export function mergeOptions (
     }
   }
 
+  // 最终返回的结果
   const options = {}
   let key
   for (key in parent) {
@@ -427,8 +433,11 @@ export function mergeOptions (
       mergeField(key)
     }
   }
+  // 合并选项, childVal 优先级高于 parentVal
   function mergeField (key) {
+    // 合并策略函数, 如果 key 冲突, 则 childVal 会覆盖 parentVal
     const strat = strats[key] || defaultStrat
+    // 如果 childVal 存在, 则优先使用 childVal, 否则使用 parentVal
     options[key] = strat(parent[key], child[key], vm, key)
   }
   return options

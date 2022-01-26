@@ -125,6 +125,7 @@ export default class Watcher {
 
   /**
    * Add a dependency to this directive.
+   * 将 dep 放到 watcher 中
    */
   addDep (dep: Dep) {
     const id = dep.id
@@ -132,6 +133,7 @@ export default class Watcher {
       this.newDepIds.add(id)
       this.newDeps.push(dep)
       if (!this.depIds.has(id)) {
+        // 将 watcher 放到 dep中, 来一个双向收集
         dep.addSub(this)
       }
     }
@@ -165,10 +167,16 @@ export default class Watcher {
   update () {
     /* istanbul ignore else */
     if (this.lazy) {
+      // 懒执行时走这里 比如: computed
+      // 将 dirty 置为 true, 在组件更新后, 当响应式数据再次被更新时, 执行 computedGetter
+      // 执行 computed 回调函数, 计算新值, 然后缓存到 watcher.value
       this.dirty = true
     } else if (this.sync) {
+      // 调用 this.$watch 或者 watch 选项时可以传入一个 sync 选项, 
+      // 当 sync = true, 在数据更新时该 watcher 就不走异步更新队列, 直接执行 this.run()
       this.run()
     } else {
+      // 更新时一般都走这里, 将 watcher 放入 watcher 队列
       queueWatcher(this)
     }
   }
@@ -176,6 +184,10 @@ export default class Watcher {
   /**
    * Scheduler job interface.
    * Will be called by the scheduler.
+   * 由刷新队列函数 flushSchedulerQueue 调用, 如果是同步 watch, 则由 this.update 直接调用, 完成如下几件事:
+   *  1. 执行实例化 watcher 传递的第二个参数, updateComponent 或者 获取 this.xx 的一个函数(parsePath 返回的函数)
+   *  2. 更新旧值为新值
+   *  3. 执行实例化 watcher 时传递的第三个参数, 比如用户 watcher 的回调函数
    */
   run () {
     if (this.active) {
@@ -189,12 +201,15 @@ export default class Watcher {
         this.deep
       ) {
         // set new value
+        // 设置新值
         const oldValue = this.value
         this.value = value
         if (this.user) {
           const info = `callback for watcher "${this.expression}"`
+          // 如果是用户 watcher, 则执行用户传递的第三个参数 -- 回调函数, 参数为 val 和 oldVal
           invokeWithErrorHandling(this.cb, this.vm, [value, oldValue], this.vm, info)
         } else {
+          // 渲染 watcher  
           this.cb.call(this.vm, value, oldValue)
         }
       }

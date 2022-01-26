@@ -7,8 +7,11 @@ import {
   baseWarn
 } from 'compiler/helpers'
 
+// 处理元素上的动态和静态 class 属性, 得到 staticClass 和 classBinding
 function transformNode (el: ASTElement, options: CompilerOptions) {
+  // 日志
   const warn = options.warn || baseWarn
+  // 获取元素上静态 calss 属性的值 xx, <div class="xx"></div>
   const staticClass = getAndRemoveAttr(el, 'class')
   if (process.env.NODE_ENV !== 'production' && staticClass) {
     const res = parseText(staticClass, options.delimiters)
@@ -22,9 +25,11 @@ function transformNode (el: ASTElement, options: CompilerOptions) {
       )
     }
   }
+  // 静态 class 属性赋值给 el.staticClass
   if (staticClass) {
     el.staticClass = JSON.stringify(staticClass.replace(/\s+/g, ' ').trim())
   }
+  // 处理 :class="{{className}}"
   const classBinding = getBindingAttr(el, 'class', false /* getStatic */)
   if (classBinding) {
     el.classBinding = classBinding

@@ -29,13 +29,16 @@ export default class Dep {
   }
 
   depend () {
+    // Dep.target 其实是一个watcher
     if (Dep.target) {
+      // 执行 watcehr 上的 addDep 方法
       Dep.target.addDep(this)
     }
   }
 
   notify () {
     // stabilize the subscriber list first
+    // 拿到 dep 收集到的所有的 watcher
     const subs = this.subs.slice()
     if (process.env.NODE_ENV !== 'production' && !config.async) {
       // subs aren't sorted in scheduler if not running async
@@ -43,6 +46,7 @@ export default class Dep {
       // order
       subs.sort((a, b) => a.id - b.id)
     }
+    // 遍历所有 watcher, 并依次执行 wathcer.update() 方法
     for (let i = 0, l = subs.length; i < l; i++) {
       subs[i].update()
     }

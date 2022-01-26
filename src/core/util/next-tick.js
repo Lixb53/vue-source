@@ -10,6 +10,12 @@ export let isUsingMicroTask = false
 const callbacks = []
 let pending = false
 
+/**
+ * 做了三件事:
+ *  1. 将 pending 置为 false, 表示下一个 flushCallbacks 函数可以进入浏览器的任务队列了
+ *  2. 清空 callbacks 数组
+ *  3. 执行 callbacks 数组中的每一个函数 (比如: flushSchedulerQueue, 用户调用 $nextTick 传递的回调函数)
+ */
 function flushCallbacks () {
   pending = false
   const copies = callbacks.slice(0)
@@ -84,6 +90,13 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   }
 }
 
+/**
+ * 完成两件事:
+ *  1. 用 try catch 包装 flushSchedulerQueue 函数, 然后将其放入 callbacks 数组
+ *  2. 如果 pending 为 false, 表示现在浏览器的任务队列中没有 flushCallbacks 函数
+ *     如果 padding 为 true, 则表示浏览器的任务队列已经被放入了 flushCallbacks 函数
+ *     待执行 flushCallback 函数时, pending 会被置为 false, 表示下一个 flushCallbacks 函数可以进入浏览器的任务队列了
+ */
 export function nextTick (cb?: Function, ctx?: Object) {
   let _resolve
   callbacks.push(() => {
@@ -99,6 +112,7 @@ export function nextTick (cb?: Function, ctx?: Object) {
   })
   if (!pending) {
     pending = true
+    // 执行 timerFunc, 在浏览器的任务队列中 (首选微任务队列) 放入 flushCallbacks 函数
     timerFunc()
   }
   // $flow-disable-line

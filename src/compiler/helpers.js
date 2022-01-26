@@ -66,6 +66,19 @@ function prependModifierMarker (symbol: string, name: string, dynamic?: boolean)
     : symbol + name // mark the event as captured
 }
 
+/**
+ * 处理事件属性, 将事件属性添加到 el.events 对象或者 el.nativeEvents 对象中: 格式:
+ * el.events[name] = [{value, start, end, modifiers, dynamic}]
+ * 其中大量篇幅都是在处理 name 属性带修饰符(modifier) 的情况
+ * @param {*} el ast 对象
+ * @param {*} name 属性名, 即事件名
+ * @param {*} value 属性值, 即事件回调函数名
+ * @param {*} modifiers 修饰符
+ * @param {*} important 
+ * @param {*} warn 日志
+ * @param {*} range 
+ * @param {*} dynamic 属性名是否是动态的
+ */
 export function addHandler (
   el: ASTElement,
   name: string,
@@ -76,9 +89,11 @@ export function addHandler (
   range?: Range,
   dynamic?: boolean
 ) {
+  // modifiers 是一个对象, 如果传递的参数为空, 则给一个冻结的对象
   modifiers = modifiers || emptyObject
   // warn prevent and passive modifier
   /* istanbul ignore if */
+  // passive 和 prevent 不能一起使用
   if (
     process.env.NODE_ENV !== 'production' && warn &&
     modifiers.prevent && modifiers.passive
@@ -93,6 +108,7 @@ export function addHandler (
   // normalize click.right and click.middle since they don't actually fire
   // this is technically browser-specific, but at least for now browsers are
   // the only target envs that have right/middle clicks.
+  // 处理鼠标中键, 右键
   if (modifiers.right) {
     if (dynamic) {
       name = `(${name})==='click'?'contextmenu':(${name})`
@@ -109,8 +125,11 @@ export function addHandler (
   }
 
   // check capture modifier
+  // 分别处理 capture once passive 修饰符, 通过给 name 添加不同的标记来标记这些修饰符
   if (modifiers.capture) {
     delete modifiers.capture
+    // 动态属性: _p(attrName, !)
+    // 静态属性: !attrName
     name = prependModifierMarker('!', name, dynamic)
   }
   if (modifiers.once) {
@@ -123,8 +142,10 @@ export function addHandler (
     name = prependModifierMarker('&', name, dynamic)
   }
 
+  // 处理事件
   let events
   if (modifiers.native) {
+    // 原生事件
     delete modifiers.native
     events = el.nativeEvents || (el.nativeEvents = {})
   } else {
@@ -180,6 +201,16 @@ export function getBindingAttr (
 // doesn't get processed by processAttrs.
 // By default it does NOT remove it from the map (attrsMap) because the map is
 // needed during codegen.
+/**
+ * 从 el.attrsList 中删除指定的属性 name
+ * 如果 removeFromMap 为 true, 则同样删除 el.attrsMap 对象中的属性
+ *  比如 v-if v-else-if v-else 等属性就会被移除
+ *  不过一般不会删除该对象上的属性, 因为从 ast 生成 代码期间还需要使用该对象
+ * @param {*} el 
+ * @param {*} name 
+ * @param {*} removeFromMap 
+ * @returns 
+ */
 export function getAndRemoveAttr (
   el: ASTElement,
   name: string,

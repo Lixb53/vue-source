@@ -2,6 +2,11 @@
 
 import { toArray } from '../util/index'
 
+/**
+ * 定义 Vue.use, 负责为 Vue 安装插件, 做了一下两件事:
+ *  1. 判断插件是否已经安装,如果安装直接结束
+ *  2. 安装插件, 执行插件的 install 方法
+ */
 export function initUse (Vue: GlobalAPI) {
   Vue.use = function (plugin: Function | Object) {
     const installedPlugins = (this._installedPlugins || (this._installedPlugins = []))

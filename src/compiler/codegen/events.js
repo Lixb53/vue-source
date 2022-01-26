@@ -52,6 +52,9 @@ const modifierCode: { [key: string]: string } = {
   right: genGuard(`'button' in $event && $event.button !== 2`)
 }
 
+// 生成自定义事件的代码
+// 动态: 'nativeOn|on_d(staticHandlers, [dynamicHanlders])
+// 静态: `nativeOn|on${staticHandlers}`
 export function genHandlers (
   events: ASTElementHandlers,
   isNative: boolean
@@ -60,17 +63,23 @@ export function genHandlers (
   let staticHandlers = ``
   let dynamicHandlers = ``
   for (const name in events) {
+    // 获取指定事件的回调函数名(methodName) || 'function($event){events[name].value}'
     const handlerCode = genHandler(events[name])
     if (events[name] && events[name].dynamic) {
+      // 动态事件: 'name, function($event){events[name].value},'
       dynamicHandlers += `${name},${handlerCode},`
     } else {
+      // 静态事件: '"name": methodName || '"name":function($event){events[name].value}'
       staticHandlers += `"${name}":${handlerCode},`
     }
   }
+  // 去掉末尾的逗号 
   staticHandlers = `{${staticHandlers.slice(0, -1)}}`
   if (dynamicHandlers) {
+    // 'on:_d("click:handleClick,[input, function($event){events[name].value}]")
     return prefix + `_d(${staticHandlers},[${dynamicHandlers.slice(0, -1)}])`
   } else {
+    // 'on:"click":handleClick'
     return prefix + staticHandlers
   }
 }

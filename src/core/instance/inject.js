@@ -4,6 +4,7 @@ import { hasOwn } from 'shared/util'
 import { warn, hasSymbol } from '../util/index'
 import { defineReactive, toggleObserving } from '../observer/index'
 
+// 初始化provide, 在 vm 上挂载 _provided, 最后 inject 通过 _provided 获取对应 key 的值
 export function initProvide (vm: Component) {
   const provide = vm.$options.provide
   if (provide) {
@@ -17,6 +18,7 @@ export function initInjections (vm: Component) {
   const result = resolveInject(vm.$options.inject, vm)
   if (result) {
     toggleObserving(false)
+    // 将 inject 中的 key 代理到 vm 上
     Object.keys(result).forEach(key => {
       /* istanbul ignore else */
       if (process.env.NODE_ENV !== 'production') {
@@ -44,11 +46,14 @@ export function resolveInject (inject: any, vm: Component): ?Object {
       ? Reflect.ownKeys(inject)
       : Object.keys(inject)
 
+    // 遍历 inject 选项中 key 组成的数组
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i]
       // #6574 in case the inject object is observed...
       if (key === '__ob__') continue
+      // 获取 from 属性
       const provideKey = inject[key].from
+      // 从祖代组件的配置项中找到 provide 选项, 从而找到对应的 key 的值
       let source = vm
       while (source) {
         if (source._provided && hasOwn(source._provided, provideKey)) {
