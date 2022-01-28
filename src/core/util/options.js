@@ -305,6 +305,7 @@ function normalizeProps (options: Object, vm: ?Component) {
     while (i--) {
       val = props[i]
       if (typeof val === 'string') {
+        // 处理 'props-name' -> propsName
         name = camelize(val)
         res[name] = { type: null }
       } else if (process.env.NODE_ENV !== 'production') {
@@ -385,7 +386,7 @@ function assertObjectType (name: string, value: any, vm: ?Component) {
  * Merge two option objects into a new one.
  * Core utility used in both instantiation and inheritance.
  */
-// 合并两个选项, 出现相同配置项时,, 子选项会覆盖副选项的配置
+// 合并两个选项, 出现相同配置项时,, 子选项会覆盖父选项的配置
 export function mergeOptions (
   parent: Object,
   child: Object,

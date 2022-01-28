@@ -200,7 +200,7 @@ export function createComponent (
   }
 
   // 抽取 props 数据, 得到 propsData 对象, propsData[key] = val
-  // 已组建 props 配置中的属性为 key, 父组件中对应的数据为 val
+  // 以组件 props 配置中的属性为 key, 父组件中对应的数据为 val
   // extract props
   const propsData = extractPropsFromVNodeData(data, Ctor, tag)
 

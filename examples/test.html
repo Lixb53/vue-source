@@ -8,10 +8,7 @@
 </head>
 <body>
     <div id="app">
-        <span @click="click">abc</span>
-        <comp v-model="msg">slot</comp>
-        <!-- <input  type="checkbox" v-model="msg" checked>
-        <span v-for="item in items" :key="item">{{item}}</span> -->
+        <div v-for="item in items" :key="item">{{item}}</div>
     </div>
     <script src="../dist/vue.js"></script>
     <script>
@@ -24,13 +21,17 @@
                 prop: 'msg',
                 event: 'cc'
             },
-            template: `<div @click="$emit('cc', 'abc')"><slot>没有传递内容的话, 这就是默认内容</slot><span>{{msg}}</span></div>`
+            inject: ['test'],
+            template: `<div @click="$emit('cc', 'abc')"><slot>没有传递内容的话, 这就是默认内容</slot><span @click="$emit('handleclick', 'abc')">{{msg}}</span></div>`
         }
-        new Vue({
+        const vm = new Vue({
             el: '#app',
             data: {
                 items: [1,2,3,4],
-                msg: ''
+                msg: '123'
+            },
+            provide: {
+                test: 'msg'
             },
             components: {
                 comp
@@ -41,6 +42,9 @@
                 },
                 click() {
                     console.log('abc', this)
+                },
+                handleCreated() {
+                    console.log('created')
                 }
             }
         })

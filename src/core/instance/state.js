@@ -78,6 +78,7 @@ export function initState (vm: Component) {
     initWatch(vm, opts.watch)
   }
   // computed 和 watch 有什么区别?
+  // computed 和 watch 都是通过 Watcher 来实现的, 区别有以下两点
   // computd 默认懒执行, 且不可更改, 但是 watcher 可配置
   // 使用场景不同
 }

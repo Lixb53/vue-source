@@ -15,6 +15,7 @@ export function renderList (
     index?: number
   ) => VNode
 ): ?Array<VNode> {
+  debugger
   let ret: ?Array<VNode>, i, l, keys, key
   if (Array.isArray(val) || typeof val === 'string') {
     ret = new Array(val.length)

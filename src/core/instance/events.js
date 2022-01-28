@@ -11,8 +11,11 @@ import { updateListeners } from '../vdom/helpers/index'
 
 export function initEvents (vm: Component) {
   vm._events = Object.create(null)
+  // 表示父组件有没有直接绑定 hook 钩子在当前组件上 (比如: <comp @hook:created="handle"></comp>)
   vm._hasHookEvent = false
   // init parent attached events
+
+  // 这块拿到的值是父组件传递的所有事件和组件自身内部的事件方法的集合
   const listeners = vm.$options._parentListeners
   if (listeners) {
     updateComponentListeners(vm, listeners)

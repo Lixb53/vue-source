@@ -50,6 +50,7 @@ export function initMixin (Vue: Class<Component>) {
       //    2. { components: { xxx } }, 子组件内部注册的组件, 局部注册, 执行编译器生成的 render 函数时做了选项合并, 会合并全局配置项到组件局部配置项上
       //    3. 这里的根组件的情况
       vm.$options = mergeOptions(
+        // { components: {keepAlive, Transition, ...}, directives: {model, show}, filters, _base}
         resolveConstructorOptions(vm.constructor),
         options || {},
         vm
@@ -66,7 +67,10 @@ export function initMixin (Vue: Class<Component>) {
     vm._self = vm
     // 组件关系属性的初始化, 比如: $parent, $root, $children
     initLifecycle(vm)
-    // 初始化自定义事件
+    /**
+     * 初始化自定义事件，这里需要注意一点，所以我们在 <comp @click="handleClick" /> 上注册的事件，监听者不是父组件，
+     * 而是子组件本身，也就是说事件的派发和监听者都是子组件本身，和父组件无关
+     */
     initEvents(vm)
     // 初始化插槽, 获取this.$slots, 定义this._c 即createElement方法, 平时使用的  h 函数
     initRender(vm)

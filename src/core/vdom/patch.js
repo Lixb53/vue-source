@@ -890,7 +890,6 @@ export function createPatchFunction (backend) {
         )
 
         // update parent placeholder node element, recursively
-        debugger
         if (isDef(vnode.parent)) {
           let ancestor = vnode.parent
           const patchable = isPatchable(vnode)

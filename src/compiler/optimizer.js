@@ -58,6 +58,7 @@ function markStatic (node: ASTNode) {
     // do not make component slot content static. this avoids
     // 1. components not able to mutate slot nodes
     // 2. static slot content fails for hot-reloading
+    
     // 不要将组件插槽内容设置为静态。这避免了
     // 1.无法改变插槽节点的组件
     // 2.热重新加载时静态插槽内容失败

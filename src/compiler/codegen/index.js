@@ -400,6 +400,7 @@ function genDirectives (el: ASTElement, state: CodegenState): string | void {
       }${
         dir.modifiers ? `,modifiers:${JSON.stringify(dir.modifiers)}` : ''
       }},`
+      console.log(res)
     }
   }
   if (hasRuntime) {
