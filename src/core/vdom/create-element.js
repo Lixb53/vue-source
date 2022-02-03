@@ -65,6 +65,7 @@ export function _createElement (
   children?: any,
   normalizationType?: number
 ): VNode | Array<VNode> {
+  debugger
   if (isDef(data) && isDef((data: any).__ob__)) {
     // 属性不能是一个响应式对象
     process.env.NODE_ENV !== 'production' && warn(

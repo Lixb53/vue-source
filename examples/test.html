@@ -8,7 +8,7 @@
 </head>
 <body>
     <div id="app">
-        <div v-for="item in items" :key="item">{{item}}</div>
+        <comp :msg="msg" @handleClick="handleClick"></comp>
     </div>
     <script src="../dist/vue.js"></script>
     <script>
@@ -16,6 +16,18 @@
         //     template: `<div><slot>没有传递内容的话, 这就是默认内容</slot></div>`
         // })
         const comp = {
+            template: `
+                <div>
+                    <slot name="slot1">
+                        <span>插槽默认内容</span>
+                    </slot>
+                    <slot name="slot2" v-bind:test="'作用域插槽'">
+                        <span>插槽默认内容</span>    
+                    </slot>    
+                </div>    
+            `
+        }
+        const comp1 = {
             props: ['msg'],
             model: {
                 prop: 'msg',
@@ -35,6 +47,11 @@
             },
             components: {
                 comp
+            },
+            computed: {
+                msg1() {
+                    return this.msg + 'msg'
+                }
             },
             methods: {
                 handleClick(a) {

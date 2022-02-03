@@ -25,6 +25,7 @@ export const createCompiler = createCompilerCreator(function baseCompile (
   }
   // 代码生成, 将 ast 转换成可执行的 render 函数的字符串形式 
   
+  debugger
   const code = generate(ast, options)
   console.log(code)
   return {

@@ -42,6 +42,7 @@ export function initMixin (Vue: Class<Component>) {
        * 每个子组件初始化时走这里, 这里只做了一些性能优化
        * 将组件配置对象上的一些深层次属性放到 vm.$options 选项中, 以提高代码的执行率, 避免了原型链的动态查找
        */
+      debugger
       initInternalComponent(vm, options)
     } else {
       // 根组件走这里, 进行选项合并, 将全局配置选项合并到根组件的局部配置上

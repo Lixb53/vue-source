@@ -39,6 +39,17 @@ export function addRawAttr (el: ASTElement, name: string, value: any, range?: Ra
   el.attrsList.push(rangeSetItem({ name, value }, range))
 }
 
+/**
+ * 
+ * @param {*} el ast 对象
+ * @param {*} name 指令名称 比如: v-model 的 model
+ * @param {*} rawName 指令 v-modle
+ * @param {*} value 值 v-model="xx" 中的 xx
+ * @param {*} arg 动态参数   比如: v-bind:xxx 中的 xxx
+ * @param {*} isDynamicArg 是否是动态参数
+ * @param {*} modifiers 修饰符
+ * @param {*} range 范围  起始下标
+ */
 export function addDirective (
   el: ASTElement,
   name: string,
